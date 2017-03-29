@@ -11,10 +11,13 @@
   "author": "tadachi",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^7.0.8",
+    "@types/node": "^7.0.11",
     "electron": "^1.4.1",
     "less": "^2.7.2",
-    "typescript": "^2.2.1"
+    "typescript": "^2.2.1",
+    "@types/electron": "^1.4.34",
+    "@types/request": "0.0.42",
+    "@types/vue": "^2.0.0"
   },
   "dependencies": {
     "bluebird": "^3.5.0",
@@ -22,12 +25,14 @@
     "electron-dl": "^1.7.0",
     "fs": "0.0.1-security",
     "http": "0.0.0",
+    "path": "^0.12.7",
     "progressbar.js": "^1.0.1",
     "remove": "^0.1.5",
     "request": "^2.81.0",
     "shortid": "^2.2.8",
     "svg.js": "^2.5.0",
     "vue": "^2.2.4",
+    "vuex": "^2.2.1",
     "ytdl-core": "^0.10.0"
   }
 }

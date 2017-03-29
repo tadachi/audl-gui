@@ -3,11 +3,18 @@
 // All of the Node.js APIs are available in this process.
 "use strict";
 exports.__esModule = true;
-var audl = require("./audl");
-var Vue = require("./node_modules/vue/dist/vue");
 var ProgressBar = require("progressbar.js");
 var fs = require("fs");
 var request = require("request");
+var shortid = require("shortid");
+var electron = require("electron");
+var path = require("path");
+var Vue = require("./node_modules/vue/dist/vue");
+var Vuex = require("./node_modules/vuex/dist/vuex");
+Vue.use(Vuex);
+var dialog = electron.remote.dialog;
+var app = electron.remote.app;
+var BASEPATH = app.getAppPath();
 var Progress = (function () {
     function Progress(div) {
         this._div = div;
@@ -36,6 +43,8 @@ var Progress = (function () {
         this.bar = new ProgressBar.Line(this._div, this.config);
     }
     Progress.prototype.tick = function (t) {
+        if (t >= 1)
+            this.bar.aniamte(1);
         if (t) {
             this.bar.animate(t);
             return;
@@ -51,11 +60,6 @@ var Progress = (function () {
         this.bar.aniamte(this.ticks);
     };
     return Progress;
-}());
-var BigFile = (function () {
-    function BigFile(remote_file, local_file) {
-    }
-    return BigFile;
 }());
 /**
  * Promise based download file method
@@ -74,6 +78,9 @@ function downloadFile(config) {
         req.on('response', function (data) {
             // Change the total bytes value to get progress later.
             total_bytes = parseInt(data.headers['content-length']);
+        });
+        req.on('error', function (err) {
+            reject(err);
         });
         // Get progress if callback exists
         if (config.hasOwnProperty("onProgress")) {
@@ -112,100 +119,117 @@ var Versions = new Vue({
         vue_version: Vue.version
     }
 });
-// let prog = new Progress('#container');
-// let config = {
-//     remoteFile: "http://download.thinkbroadband.com/5MB.zip",
-//     localFile: "./dia.zip",
-//     onProgress: (received, total) => {
-//         let tick = (received / total).toFixed(2);
-//         prog.tick();
-//     },
-//     onFinish: () => {
-//         prog.finish();
-//     }
-// }
-// let fileProgress = Vue.component('file', {
-//     template: '#file-template',
-//     props: [
-//         'data'
-//     ]
-// });
-// let row = Vue.component('row', {
-//     template: '#row-template',
-//     props: [
-//         'data'
-//     ]
-// });
-var Files = new Vue({
-    el: '#Files',
-    data: {
-        items: []
+var store = new Vuex.Store({
+    state: {
+        files: [],
+        folders: { default_folder: BASEPATH }
     },
-    methods: {
-        addFile: function () {
-            this.items.push({ progress: 'blkeh', file: 't', location: 'l' });
-            // this.count += 1;
-            // this.items.push({ progress: 0, file: 't', location: 'l', action: 'a' })
-            // console.log(this.data);
+    mutations: {
+        ADD_FILE: function (state, payload) {
+            var file = {
+                id: payload.id,
+                remFile: payload.remFile,
+                locFile: payload.locFile,
+                file: path.join(payload.default_folder, payload.locFile),
+                location: state.default_folder,
+                error0: null
+            };
+            state.files.push(file);
+            console.log(state.files);
         },
-        removeFile: function (index) {
-            console.log(index);
-            this.items.splice(index, 1);
-            // this.count -= 1;
-            // this.items.pop();
-            // console.log(this.data);
+        EDIT_FILE: function (state, payload) {
+            var i = payload.index;
+            state.files[i].error0 = payload.e;
         },
-        removeAllFiles: function () {
-            this.items = [];
+        CLEAR_FILE: function (state, payload) {
+            state.files.splice(payload.index, 1);
+        },
+        CLEAR_ALL_FILES: function (state) {
+            state.files.splice(0, state.files.length);
+            console.log(state.files);
+        },
+        CHANGE_DEFAULT_FOLDER: function (state, payload) {
+            state.folders = { default_folder: payload.new_default_folder };
+            console.log(state.folders.default_folder);
         }
     }
 });
-// downloadFile(config);
-// // Button
-// var app5 = new Vue({
-//     el: '#app-5',
-//     data: {
-//         message: 'Hello Vue.js!'
-//     },
-//     methods: {
-//         reverseMessage: function () {
-//             this.message = this.message.split('').reverse().join('')
-//         }
-//     }
-// });
-// console.log(vm.$data === data) // -> true
-// vm.$el === document.getElementById('example') // -> true
-// // $watch is an instance method
-// vm.$watch('a', function (newVal, oldVal) {
-//     // this callback will be called when `vm.a` changes
-//     console.log('vm.a changed ' + vm.a)
-// })
-// data.a = 2;
-var url = 'https://www.youtube.com/watch?v=dPbL4Y8KsSM';
-audl.getInfo(url).then(function (info) {
-    var audio_file_meta = new audl.YTAudioFileMeta(info);
-    var title = info.title.replace(/[^a-z]+/gi, '_').toLowerCase(); // music_title.
-    var formats = audio_file_meta.formats;
-    var itag_info = [];
-    function push(itag) {
-        itag_info.push({
-            title: title,
-            itag: formats[itag].itag.toString(),
-            encoding: formats[itag].audioEncoding.toString(),
-            bitrate: formats[itag].audioBitrate.toString()
-        });
+var Files = new Vue({
+    el: '#Files',
+    data: {
+        files: store.state.files,
+        default_folder: store.state.folders.default_folder
+    },
+    methods: {
+        addFile: function () {
+            var div = shortid.generate();
+            var remFile = "hhttp://download.thinkbroadband.com/5MB.zip";
+            var locFile = "/dia.zip";
+            store.commit('ADD_FILE', {
+                id: div,
+                remFile: remFile,
+                locFile: locFile,
+                default_folder: this.default_folder
+            });
+            var i = this.files.length - 1;
+            // Update Vue render.
+            this.$nextTick(function () {
+                var prog = new Progress('#' + div);
+                var config = {
+                    remoteFile: remFile,
+                    localFile: locFile,
+                    onProgress: function (received, total) {
+                        var tick = (received / total).toFixed(2);
+                        prog.tick();
+                    },
+                    onFinish: function () {
+                        prog.finish();
+                    }
+                };
+                downloadFile(config).then(function () {
+                })["catch"](function (e) {
+                    store.commit('EDIT_FILE', { index: i, e: e.message });
+                });
+            });
+        },
+        clearFile: function (index) {
+            store.commit('CLEAR_FILE', { index: index });
+        },
+        clearAllFiles: function () {
+            store.commit('CLEAR_ALL_FILES');
+        },
+        changeDefaultFolder: function () {
+            // Show a dialog to change default download folder.
+            var new_default_folder = dialog.showOpenDialog({ properties: ['openFile', 'openDirectory', 'multiSelections'] })[0];
+            // Just grab the first value.
+            if (new_default_folder[0])
+                this.default_folder = new_default_folder;
+            store.commit('CHANGE_DEFAULT_FOLDER', { new_default_folder: new_default_folder });
+        }
     }
-    for (var itag in formats) {
-        var found = false;
-        if (itag === '139')
-            push(itag);
-        if (itag === '140')
-            push(itag);
-        if (itag === '141')
-            push(itag);
-    }
-    console.log();
-    console.table(itag_info);
-}).error(function (err) {
-    console.log(err);
 });
+// let url: string = 'https://www.youtube.com/watch?v=dPbL4Y8KsSM';
+// audl.getInfo(url).then((info) => {
+//     let audio_file_meta = new audl.YTAudioFileMeta(info);
+//     let title = info.title.replace(/[^a-z]+/gi, '_').toLowerCase(); // music_title.
+//     let formats = audio_file_meta.formats;
+//     let itag_info = [];
+//     function push(itag) {
+//         itag_info.push({
+//             title: title,
+//             itag: formats[itag].itag.toString(),
+//             encoding: formats[itag].audioEncoding.toString(),
+//             bitrate: formats[itag].audioBitrate.toString(),
+//         })
+//     }
+//     for (let itag in formats) {
+//         let found = false;
+//         if (itag === '139') push(itag)
+//         if (itag === '140') push(itag)
+//         if (itag === '141') push(itag)
+//     }
+//     // console.log()
+//     // console.table(itag_info);
+// }).error((err) => {
+//     // console.log(err);
+// }); 

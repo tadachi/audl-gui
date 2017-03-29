@@ -8,14 +8,7 @@
 </head>
 
 <body>
-  <!--<div id="drawing"></div>-->
-  <!--<div id="app-5">
-    <p>{{ message }}</p>
-    <button v-on:click="reverseMessage">Reverse Message</button>
-  </div>-->
-
   <div id="Versions">
-
     <div class="flex_container">
       <div class="table">
         <div class="tr th">
@@ -27,34 +20,34 @@
           </div>
         </div>
         <div class="tr">
-          <div class="td">
+          <div class="td-center">
             Node
           </div>
-          <div class="td" style="justify-content: center;">
+          <div class="td-center">
             {{node_version}}
           </div>
         </div>
         <div class="tr">
-          <div class="td">
+          <div class="td-center">
             Chrome
           </div>
-          <div class="td" style="justify-content: center;">
+          <div class="td-center">
             {{chrome_version}}
           </div>
         </div>
         <div class="tr">
-          <div class="td">
+          <div class="td-center">
             Electron
           </div>
-          <div class="td" style="justify-content: center;">
+          <div class="td-center">
             {{electron_version}}
           </div>
         </div>
         <div class="tr">
-          <div class="td">
+          <div class="td-center">
             Vue
           </div>
-          <div class="td" style="justify-content: center;">
+          <div class="td-center">
             {{vue_version}}
           </div>
         </div>
@@ -63,58 +56,54 @@
   </div>
 
   <div id="Files">
-    <button type="button" v-on:click="addFile()">addFile</button>
-    <button type="button" v-on:click="removeAllFiles()">removeAllFile</button>
+    <div class="flex_container">
+      <label>
+    </div>
+
+    <div class="flex_container">
+      <input placeholder="youtube url">
+      <textarea placeholder="youtube urls"></textarea>
+      <button type="button" v-on:click="addFile()">addFile</button>
+      <button type="button" v-on:click="clearAllFiles()">removeAllFile</button>
+      <button type="button" v-on:click="changeDefaultFolder">openDirectory</button>
+    </div>
+
     <div class="flex_container">
       <div class="table">
         <div class="tr th">
-          <div class="td">
+          <div class="td-center">
             Download Progress
           </div>
-          <div class="td">
+          <div class="td-center">
             File
           </div>
-          <div class="td">
-            Location
-          </div>
-          <div class="td">
+          <div class="td-center">
             Action
           </div>
-        </div>
-        <!--<row > -->
-        <!--<file v-for="item in items" :key="item.id" :data="item"></file>-->
-        <div class="tr" v-for="(item,index) in items">
-          <div class="td">
-            {{index}}, {{item.progress}}
-          </div>
-          <div class="td">
-            {{item.file}}
-          </div>
-          <div class="td">
-            {{item.location}}
-          </div>
-          <div class="td">
-            <button type="button" v-on:click="removeFile(index)">removeFile</button>
+          <div class="td-center">
+            Error
           </div>
         </div>
-        <!--</row>-->
+        <div class="tr" v-for="(file,index) in files">
+          <div class="td-center" v-bind:id="file.id">
+          </div>
+          <div class="td-center">
+            {{file.file}}<br />
+            {{file.remFile}}<br />
+            {{file.locFile}}<br />
+          </div>
+          <div class="td-center">
+            <button type="button" v-on:click="clearFile(index)">removeFile</button>
+          </div>
+          <div class="td-center">
+            {{file.error0}}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
 </body>
-
-<template id="row-header-template">
-  <div class="tr th"></div>
-</template>
-
-<template id="row-template">
-  <div class="tr"></div>
-</template>
-
-<template id="file-template">
-
-</template>
 
 <script>
   // You can also require other files to run in this process

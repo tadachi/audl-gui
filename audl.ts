@@ -3,7 +3,7 @@ import Promise = require('bluebird');
 import fs = require('fs');
 
 // Return a promise to get youtube info such as itag, quality, bitrate.
-export function getInfo(url): Promise {
+export function getInfo(url): Promise<any> {
     return new Promise(function (resolve, reject) {
         ytdl.getInfo(url, function (err, info) {
             if (info) resolve(info)
@@ -13,7 +13,7 @@ export function getInfo(url): Promise {
 }
 
 // Return a promise to download youtube audio content.
-export function YTdownloadAsAudio(url): Promise {
+export function YTdownloadAsAudio(url): Promise<any> {
     return new Promise(function (resolve, reject) {
         ytdl.getInfo(url, function (err, info) {
             let audio_file_meta = new YTAudioFileMeta(info);

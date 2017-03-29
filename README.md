@@ -7,4 +7,6 @@ npm install
 npm start
 # Typescript compiler watch.
 tsc -w audl.ts renderer.ts
+# less compiler watch
+less-watch-compiler ./ ./ styles.less
 ```
