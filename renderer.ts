@@ -138,9 +138,11 @@ let Versions = new Vue({
 
 const store = new Vuex.Store({
     state: {
+        urls: [],
         files: [],
         folders: { default_folder: BASEPATH }
     },
+
     mutations: {
         ADD_FILE(state, payload): void {
             const file = {
@@ -171,6 +173,21 @@ const store = new Vuex.Store({
         }
     }
 });
+
+const Debug = new Vue({
+    el: '#debug',
+    data: {
+        files: store.state.files
+    },
+    template:
+    `
+    <div class="debug">
+        <div v-for="(file,index) in files">
+        {{file.file}} 
+        </div>
+    </div>
+    `
+})
 
 let Files = new Vue({
     el: '#Files',
@@ -230,33 +247,3 @@ let Files = new Vue({
         }
     }
 });
-
-// let url: string = 'https://www.youtube.com/watch?v=dPbL4Y8KsSM';
-
-// audl.getInfo(url).then((info) => {
-//     let audio_file_meta = new audl.YTAudioFileMeta(info);
-//     let title = info.title.replace(/[^a-z]+/gi, '_').toLowerCase(); // music_title.
-//     let formats = audio_file_meta.formats;
-//     let itag_info = [];
-
-//     function push(itag) {
-//         itag_info.push({
-//             title: title,
-//             itag: formats[itag].itag.toString(),
-//             encoding: formats[itag].audioEncoding.toString(),
-//             bitrate: formats[itag].audioBitrate.toString(),
-//         })
-//     }
-
-//     for (let itag in formats) {
-//         let found = false;
-//         if (itag === '139') push(itag)
-//         if (itag === '140') push(itag)
-//         if (itag === '141') push(itag)
-//     }
-
-//     // console.log()
-//     // console.table(itag_info);
-// }).error((err) => {
-//     // console.log(err);
-// });
