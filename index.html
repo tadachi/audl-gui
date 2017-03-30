@@ -61,8 +61,8 @@
       <textarea placeholder="youtube urls" v-model="urls" rows="5">
 
       </textarea>
-      <button type="button" v-on:click="addUrls()">addUrls</button>
-      <button type="button" v-on:click="addFile()">addFile</button>
+      <button type="button" v-on:click="queueUrls()">queueUrls</button>
+      <button type="button" v-on:click="clearAllUrls()">clearAllUrls()>
       <button type="button" v-on:click="clearAllFiles()">removeAllFile</button>
       <button type="button" v-on:click="changeDefaultFolder">openDirectory</button>
     </div>
@@ -74,14 +74,14 @@
             thumbnail
           </div>
           <div class="td-center">
-            name
+            title
           </div>
           <div class="td-center">
             url
           </div>
           <div class="td-center">
             action
-            </div>
+          </div>
         </div>
         <div class="tr" v-for="(item,index) in queue">
           <div class="td-center">
@@ -94,7 +94,8 @@
             {{item.url}}
           </div>
           <div class="td-center">
-            
+            <button type="button" v-on:click="clearUrl(index)">Remove</button>
+            <button type="button" v-on:click="addFile(index)">Start</button>
           </div>
         </div>
       </div>
@@ -120,12 +121,13 @@
           <div class="td-center" v-bind:id="file.id">
           </div>
           <div class="td-center">
-            {{file.file}}<br />
-            {{file.remFile}}<br />
-            {{file.locFile}}<br />
+            {{file.file}}<br />{{file.remFile}}
+            <br /> {{file.locFile}}
+            <br />
+
           </div>
           <div class="td-center">
-            <button type="button" v-on:click="clearFile(index)">removeFile</button>
+            <button type="button" v-on:click="clearFile(index)">Remove</button>
           </div>
           <div class="td-center">
             {{file.error0}}
@@ -134,7 +136,7 @@
       </div>
     </div>
   </div>
-
+  <div id="test"></div>
   <div id="debug"></div>
 
 </body>

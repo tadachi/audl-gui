@@ -3,6 +3,7 @@ exports.__esModule = true;
 var ytdl = require("ytdl-core");
 var Promise = require("bluebird");
 var fs = require("fs");
+var path = require("path");
 // Return a promise to get youtube info such as itag, quality, bitrate.
 function getInfo(url) {
     return new Promise(function (resolve, reject) {
@@ -15,14 +16,16 @@ function getInfo(url) {
     });
 }
 exports.getInfo = getInfo;
-// Return a promise to download youtube audio content.
-function YTdownloadAsAudio(url) {
+// Return a promise to download youtube audio content. Downloads to the same directory audl was run in.
+function YTdownloadAsAudio(url, directory) {
+    if (directory === void 0) { directory = ""; }
     return new Promise(function (resolve, reject) {
         ytdl.getInfo(url, function (err, info) {
             var audio_file_meta = new YTAudioFileMeta(info);
             var file_type = '.m4a';
             // Remove unneeded characters and replace with underscores for readability and make it file friendly.
             var file_name = audio_file_meta.title.replace(/[^a-z]+/gi, '_').toLowerCase() + file_type; // music_title.m4a
+            file_name = path.join(directory, file_name);
             var write_stream = fs.createWriteStream(file_name);
             var audio = ytdl(url, { quality: 140 });
             audio.pipe(write_stream);

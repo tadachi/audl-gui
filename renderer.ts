@@ -3,6 +3,7 @@
 // All of the Node.js APIs are available in this process.
 
 import audl = require("./audl");
+import ytdl = require('ytdl-core');
 import * as SVG from 'svg.js';
 import * as ProgressBar from 'progressbar.js';
 import fs = require('fs');
@@ -14,6 +15,7 @@ import Promise = require('bluebird');
 import Vue = require('./node_modules/vue/dist/vue');
 import Vuex = require('./node_modules/vuex/dist/vuex');
 import { mapState } from 'vuex'
+
 Vue.use(Vuex);
 const { dialog } = electron.remote;
 const { app } = electron.remote;
@@ -52,14 +54,14 @@ class Progress {
         this.bar = new ProgressBar.Line(this._div, this.config);
     }
     tick(t?: number): void {
-        if (t >= 1)
-            this.bar.aniamte(1);
-
+        if (t >= 1) {
+            this.bar.animate(1);
+            return
+        }
         if (t) {
             this.bar.animate(t);
             return;
         }
-
         if (this.ticks <= 1.0) {
             this.ticks += 0.01
             this.bar.animate(this.ticks);  // Number from 0.0 to 1.0
@@ -69,7 +71,7 @@ class Progress {
 
     finish(): void {
         this.ticks = 1.0
-        this.bar.aniamte(this.ticks);
+        this.bar.animate(this.ticks);
     }
 }
 
@@ -127,6 +129,73 @@ function downloadFile(config) {
     });
 }
 
+// let prog = new Progress('test');
+
+// let config = {
+//     remoteFile: remFile,
+//     localFile: locFile,
+//     onProgress: (received, total) => {
+//         let tick = (received / total).toFixed(2);
+//         prog.tick();
+//     },
+//     onFinish: () => {
+//         prog.finish();
+//     }
+// }
+// downloadFile(config).then(() => {
+
+// }).catch((e) => {
+// });
+
+function YTDownloadAudioCustom(config, url, file_name) {
+    return new Promise(function (resolve, reject) {
+        // Save variable to know progress
+        let received_bytes = 0;
+        let total_bytes = 0;
+        let write_stream = fs.createWriteStream(file_name);
+        let audio = ytdl(url);
+        audio.pipe(write_stream);
+        audio.on('response', function (req) {
+            // Change the total bytes value to get progress later.
+            total_bytes = parseInt(req.headers['content-length']);
+            // Get progress if callback exists
+            if (config.hasOwnProperty("onProgress")) {
+                req.on('data', function (chunk) {
+                    // Update the received bytes.
+                    received_bytes += chunk.length;
+                    console.log(received_bytes + '/' + total_bytes);
+                    if (received_bytes <= total_bytes) {
+                        config.onProgress(received_bytes, total_bytes);
+                    }
+                });
+            } else {
+                req.on('data', function (chunk) {
+                    // Update the received bytes.
+                    received_bytes += chunk.length;
+                });
+            }
+        });
+
+        // Error.
+        audio.on('error', () => {
+            reject(false);
+        });
+
+        // Finish.
+        if (config.hasOwnProperty("onFinish")) {
+            audio.on('finish', function () {
+                resolve(true);
+            });
+        } else { // Finish.
+            audio.on('finish', function () {
+                resolve(true);
+            })
+        }
+
+    })
+};
+
+
 let Versions = new Vue({
     el: '#Versions',
     data: {
@@ -136,8 +205,6 @@ let Versions = new Vue({
         vue_version: Vue.version
     }
 });
-
-
 
 const store = new Vuex.Store({
     state: {
@@ -153,12 +220,16 @@ const store = new Vuex.Store({
                 state.queue.push(payload.data[i]);
             }
         },
+        CLEAR_URL(state, payload): void {
+            state.queue.splice(payload.index, 1);
+        },
+        CLEAR_ALL_URLS(state): void {
+            state.queue.splice(0, state.queue.length);
+        },
         ADD_FILE(state, payload): void {
             const file = {
                 id: payload.id,
-                remFile: payload.remFile,
                 locFile: payload.locFile,
-                file: path.join(payload.default_folder, payload.locFile),
                 location: state.default_folder,
                 error0: null
             }
@@ -180,56 +251,19 @@ const store = new Vuex.Store({
     }
 });
 
-const Debug = new Vue({
-    el: '#debug',
-    data: {
-        state: store.state,
-    },
-    template:
-    `
-    <div class="debug">
-        <div>
-            {{state.folders.default_folder}}
-        </div>
-        <br />
-        <div v-for="(file,index) in state.files">
-        {{index}} {{file.file}} 
-        </div>
-        <br />
-        <div v-for="(item,index) in state.queue">
-        {{index}} {{item.title}} {{item.url}} 
-        </div>
-    </div>
-    `
-})
-
-// audl.getInfo(url).then((info) => {
-//     let audio_file_meta = new audl.YTAudioFileMeta(info);
-//     let title = info.title.replace(/[^a-z]+/gi, '_').toLowerCase(); // music_title.
-//     let formats = audio_file_meta.formats;
-//     let itag_info = [];
-
-//     function push(itag) {
-//         itag_info.push({
-//             title: title,
-//             itag: formats[itag].itag.toString(),
-//             encoding: formats[itag].audioEncoding.toString(),
-//             bitrate: formats[itag].audioBitrate.toString(),
-//         })
+// let prog = new Progress('#test');
+// let config = {
+//     onProgress: (received, total) => {
+//         // let tick = parseFloat((received / total).toFixed(2));
+//         prog.tick();
+//     },
+//     onFinish: () => {
+//         prog.finish();
 //     }
+// }
 
-//     for (let itag in formats) {
-//         let found = false;
-//         if (itag === '139') push(itag)
-//         if (itag === '140') push(itag)
-//         if (itag === '141') push(itag)
-//     }
-
-//     // console.log()
-//     // console.table(itag_info);
-// }).error((err) => {
-//     // console.log(err);
-// });
+// const test = `C:\\Users\\tadachi\\Desktop\\test.m4a`;
+// YTDownloadAudioCustom(config, 'https://www.youtube.com/watch?v=RyoMQg3d5cs', test);
 
 let Files = new Vue({
     el: '#Files',
@@ -238,11 +272,11 @@ let Files = new Vue({
 https://www.youtube.com/watch?v=9bZkp7q19f0
 https://www.youtube.com/watch?v=DzivgKuhNl4`,
         files: store.state.files,
-        default_folder: store.state.folders.default_folder
+        default_folder: store.state.folders.default_folder,
         queue: store.state.queue
     },
     methods: {
-        addUrls(): void {
+        queueUrls(): void {
             let batch_urls = this.urls.split('\n');
             let promises = [];
             let data = [];
@@ -268,37 +302,46 @@ https://www.youtube.com/watch?v=DzivgKuhNl4`,
             });;
 
         },
-        addFile(): void {
+        clearUrl(index): void {
+            store.commit('CLEAR_URL', { index })
+        },
+        clearAllUrls(): void {
+            store.commit('CLEAR_ALL_URLS');
+        },
+        addFile(index): void {
+            const title = this.queue[index].title;
+            const url = this.queue[index].url;
             const div = shortid.generate();
-            const remFile = "hhttp://download.thinkbroadband.com/5MB.zip"
-            const locFile = "/dia.zip"
+            const ext = '.m4a';
+            const locFile = path.join(this.default_folder, (title + ext));
+            // const remFile = "hhttp://download.thinkbroadband.com/5MB.zip"
+            // const locFile = "/dia.zip"
             store.commit('ADD_FILE',
                 {
                     id: div,
-                    remFile: remFile,
                     locFile: locFile,
                     default_folder: this.default_folder
                 }
             );
-            const i = this.files.length - 1;
+
             // Update Vue render.
             this.$nextTick(() => {
                 let prog = new Progress('#' + div);
 
                 let config = {
-                    remoteFile: remFile,
                     localFile: locFile,
                     onProgress: (received, total) => {
-                        let tick = (received / total).toFixed(2);
+                        // let tick = (received / total).toFixed(2);
                         prog.tick();
                     },
                     onFinish: () => {
                         prog.finish();
                     }
                 }
-                downloadFile(config).then(() => {
+                YTDownloadAudioCustom(config, url, locFile).then(() => {
 
                 }).catch((e) => {
+                    const i = this.files.length - 1;
                     store.commit('EDIT_FILE', { index: i, e: e.message });
                 });
             })
@@ -319,3 +362,26 @@ https://www.youtube.com/watch?v=DzivgKuhNl4`,
         }
     }
 });
+
+const Debug = new Vue({
+    el: '#debug',
+    data: {
+        state: store.state,
+    },
+    template:
+    `
+    <div class="debug">
+        <div>
+            {{state.folders.default_folder}}
+        </div>
+        <br />
+        <div v-for="(item,index) in state.queue">
+        {{index}} {{item.title}} {{item.url}} 
+        </div>
+        <br />
+        <div v-for="(file,index) in state.files">
+        {{index}} {{file.file}} 
+        </div>
+    </div>
+    `
+})
