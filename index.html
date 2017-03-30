@@ -56,16 +56,48 @@
   </div>
 
   <div id="Files">
-    <div class="flex_container">
-      <label>
-    </div>
 
     <div class="flex_container">
-      <input placeholder="youtube url">
-      <textarea placeholder="youtube urls"></textarea>
+      <textarea placeholder="youtube urls" v-model="urls" rows="5">
+
+      </textarea>
+      <button type="button" v-on:click="addUrls()">addUrls</button>
       <button type="button" v-on:click="addFile()">addFile</button>
       <button type="button" v-on:click="clearAllFiles()">removeAllFile</button>
       <button type="button" v-on:click="changeDefaultFolder">openDirectory</button>
+    </div>
+
+    <div class="flex_container">
+      <div class="table">
+        <div class="tr th">
+          <div class="td-center">
+            thumbnail
+          </div>
+          <div class="td-center">
+            name
+          </div>
+          <div class="td-center">
+            url
+          </div>
+          <div class="td-center">
+            action
+            </div>
+        </div>
+        <div class="tr" v-for="(item,index) in queue">
+          <div class="td-center">
+            thumbnail
+          </div>
+          <div class="td-center">
+            {{item.title}}
+          </div>
+          <div class="td-center">
+            {{item.url}}
+          </div>
+          <div class="td-center">
+            
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="flex_container">

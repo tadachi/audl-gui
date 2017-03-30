@@ -10,6 +10,7 @@ import request = require('request');
 import shortid = require('shortid');
 import electron = require('electron');
 import path = require('path');
+import Promise = require('bluebird');
 import Vue = require('./node_modules/vue/dist/vue');
 import Vuex = require('./node_modules/vuex/dist/vuex');
 import { mapState } from 'vuex'
@@ -136,14 +137,22 @@ let Versions = new Vue({
     }
 });
 
+
+
 const store = new Vuex.Store({
     state: {
-        urls: [],
+        folders: { default_folder: BASEPATH },
         files: [],
-        folders: { default_folder: BASEPATH }
+        queue: []
     },
 
     mutations: {
+        QUEUE_URLS(state, payload): void {
+            console.log(payload);
+            for (let i = 0; i < payload.data.length; i++) {
+                state.queue.push(payload.data[i]);
+            }
+        },
         ADD_FILE(state, payload): void {
             const file = {
                 id: payload.id,
@@ -154,7 +163,6 @@ const store = new Vuex.Store({
                 error0: null
             }
             state.files.push(file);
-            console.log(state.files);
         },
         EDIT_FILE(state, payload): void {
             const i = payload.index;
@@ -165,11 +173,9 @@ const store = new Vuex.Store({
         },
         CLEAR_ALL_FILES(state): void {
             state.files.splice(0, state.files.length);
-            console.log(state.files);
         },
         CHANGE_DEFAULT_FOLDER(state, payload): void {
             state.folders = { default_folder: payload.new_default_folder };
-            console.log(state.folders.default_folder);
         }
     }
 });
@@ -177,25 +183,91 @@ const store = new Vuex.Store({
 const Debug = new Vue({
     el: '#debug',
     data: {
-        files: store.state.files
+        state: store.state,
     },
     template:
     `
     <div class="debug">
-        <div v-for="(file,index) in files">
-        {{file.file}} 
+        <div>
+            {{state.folders.default_folder}}
+        </div>
+        <br />
+        <div v-for="(file,index) in state.files">
+        {{index}} {{file.file}} 
+        </div>
+        <br />
+        <div v-for="(item,index) in state.queue">
+        {{index}} {{item.title}} {{item.url}} 
         </div>
     </div>
     `
 })
 
+// audl.getInfo(url).then((info) => {
+//     let audio_file_meta = new audl.YTAudioFileMeta(info);
+//     let title = info.title.replace(/[^a-z]+/gi, '_').toLowerCase(); // music_title.
+//     let formats = audio_file_meta.formats;
+//     let itag_info = [];
+
+//     function push(itag) {
+//         itag_info.push({
+//             title: title,
+//             itag: formats[itag].itag.toString(),
+//             encoding: formats[itag].audioEncoding.toString(),
+//             bitrate: formats[itag].audioBitrate.toString(),
+//         })
+//     }
+
+//     for (let itag in formats) {
+//         let found = false;
+//         if (itag === '139') push(itag)
+//         if (itag === '140') push(itag)
+//         if (itag === '141') push(itag)
+//     }
+
+//     // console.log()
+//     // console.table(itag_info);
+// }).error((err) => {
+//     // console.log(err);
+// });
+
 let Files = new Vue({
     el: '#Files',
     data: {
+        urls: `https://www.youtube.com/watch?v=gXv57X7N510
+https://www.youtube.com/watch?v=9bZkp7q19f0
+https://www.youtube.com/watch?v=DzivgKuhNl4`,
         files: store.state.files,
         default_folder: store.state.folders.default_folder
+        queue: store.state.queue
     },
     methods: {
+        addUrls(): void {
+            let batch_urls = this.urls.split('\n');
+            let promises = [];
+            let data = [];
+
+            for (let i = 0; i < batch_urls.length; i++) {
+                promises.push(audl.getInfo(batch_urls[i]));
+            }
+            let e = 0;
+            Promise.map(promises, (info) => {
+                let audio_file_meta = new audl.YTAudioFileMeta(info);
+                let title = info.title.replace(/[^a-z]+/gi, '_').toLowerCase(); // music_title.
+                let payload = {
+                    title: title,
+                    url: batch_urls[e]
+                }
+                console.log(payload);
+                data.push(payload);
+                // e++;
+            }, { concurrency: 1 }).then(() => {
+                store.commit('QUEUE_URLS', { data: data });
+            }).error((err) => {
+                console.log(err);
+            });;
+
+        },
         addFile(): void {
             const div = shortid.generate();
             const remFile = "hhttp://download.thinkbroadband.com/5MB.zip"
@@ -231,7 +303,7 @@ let Files = new Vue({
                 });
             })
         },
-        clearFile(index): void {
+        clearFile(index: number): void {
             store.commit('CLEAR_FILE', { index })
         },
         clearAllFiles(): void {
