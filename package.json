@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.0",
+    "bytes": "^2.5.0",
     "console.table": "^0.8.0",
     "electron-dl": "^1.7.0",
     "fs": "0.0.1-security",

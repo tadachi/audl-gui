@@ -54,6 +54,7 @@ interface AudioFileMetaInterface {
     description: string;
     view_count: number;
     formats: any;
+    url: string;
 }
 
 export class YTAudioFileFormat implements AudioFileFormatsInterface {
@@ -79,6 +80,7 @@ export class YTAudioFileMeta implements AudioFileMetaInterface {
     description: string;
     view_count: number;
     formats: any;
+    url: string;
 
     constructor(data: any) {
         this.title = data.title;
@@ -86,6 +88,7 @@ export class YTAudioFileMeta implements AudioFileMetaInterface {
         this.length_seconds = Number(data.length_seconds);
         this.description = data.description;
         this.view_count = Number(data.view_count);
+        this.url  = data.url;
         this.formats = {};
         for (let format of data.formats) {
             this.formats[format.itag] = format;

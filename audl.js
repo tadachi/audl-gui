@@ -60,6 +60,7 @@ var YTAudioFileMeta = (function () {
         this.length_seconds = Number(data.length_seconds);
         this.description = data.description;
         this.view_count = Number(data.view_count);
+        this.url = data.url;
         this.formats = {};
         for (var _i = 0, _a = data.formats; _i < _a.length; _i++) {
             var format = _a[_i];
