@@ -13,32 +13,6 @@ export function getInfo(url): Promise<any> {
     })
 }
 
-// Return a promise to download youtube audio content. Downloads to the same directory audl was run in.
-export function YTdownloadAsAudio(url, directory = ""): Promise<any> {
-    return new Promise(function (resolve, reject) {
-        ytdl.getInfo(url, function (err, info) {
-            let audio_file_meta = new YTAudioFileMeta(info);
-            let file_type = '.m4a';
-            // Remove unneeded characters and replace with underscores for readability and make it file friendly.
-            let file_name = audio_file_meta.title.replace(/[^a-z]+/gi, '_').toLowerCase() + file_type; // music_title.m4a
-            file_name = path.join(directory, file_name);
-            let write_stream = fs.createWriteStream(file_name);
-            let audio = ytdl(url, { quality: 140 })
-            audio.pipe(write_stream);
-            audio.on('response', function (res) {
-                // Show progress while it's downloading.
-            });
-            audio.on('finish', () => {
-                resolve(true);
-            });
-            audio.on('error', () => {
-                reject(false);
-            });
-
-        })
-    });
-}
-
 interface AudioFileFormatsInterface {
     itag: number;
     container: string;

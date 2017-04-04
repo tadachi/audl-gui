@@ -23,7 +23,9 @@
     "bluebird": "^3.5.0",
     "bytes": "^2.5.0",
     "console.table": "^0.8.0",
+    "crypto": "0.0.3",
     "electron-dl": "^1.7.0",
+    "electron-remote": "^1.1.2",
     "fs": "0.0.1-security",
     "http": "0.0.0",
     "path": "^0.12.7",
@@ -34,6 +36,6 @@
     "svg.js": "^2.5.0",
     "vue": "^2.2.4",
     "vuex": "^2.2.1",
-    "ytdl-core": "^0.10.0"
+    "ytdl-core": "0.10.4"
   }
 }

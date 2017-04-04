@@ -11,9 +11,8 @@ var request = require("request");
 var shortid = require("shortid");
 var path = require("path");
 var Promise = require("bluebird");
-var bytes = require("bytes");
 // Audl
-var audl = require("./audl");
+var audl_1 = require("./audl");
 // Vue
 var Vue = require("./node_modules/vue/dist/vue");
 var Vuex = require("./node_modules/vuex/dist/vuex");
@@ -30,23 +29,12 @@ var Progress = (function () {
         this.config = {
             strokeWidth: 3,
             easing: 'easeInOut',
-            color: '#FFEA82',
+            color: '#67D5FF',
             trailColor: '#eee',
             trailWidth: 1,
             svgStyle: { width: '100%', height: '100%' },
-            text: {
-                style: {
-                    color: '#999',
-                    position: 'absolute',
-                    right: '0',
-                    top: '30px',
-                    padding: 0,
-                    margin: 0,
-                    transform: null
-                }
-            },
-            from: { color: '#FFEA82' },
-            to: { color: '#ED6A5A' }
+            from: { color: '#67D5FF' },
+            to: { color: '#36EA0D' } // lightgreen
         };
         this.bar = new ProgressBar.Line(this._div, this.config);
     }
@@ -71,72 +59,6 @@ var Progress = (function () {
     };
     return Progress;
 }());
-var Timer = (function () {
-    function Timer() {
-        this.intervals = [];
-    }
-    Timer.prototype.addInterval = function (interval) {
-        this.intervals.push(interval);
-    };
-    Timer.prototype.clearInterval = function (index) {
-        clearInterval(this.intervals[index]);
-    };
-    Timer.prototype.clearAllIntervals = function () {
-        for (var i = 0; i <= this.intervals.length; i++) {
-            clearInterval(this.intervals[i]);
-        }
-    };
-    return Timer;
-}());
-/**
- * Promise based download file method
- */
-function downloadFile(config) {
-    return new Promise(function (resolve, reject) {
-        // Save variable to know progress
-        var received_bytes = 0;
-        var total_bytes = 0;
-        var req = request({
-            method: 'GET',
-            uri: config.remoteFile
-        });
-        var out = fs.createWriteStream(config.localFile);
-        req.pipe(out);
-        req.on('response', function (data) {
-            // Change the total bytes value to get progress later.
-            total_bytes = parseInt(data.headers['content-length']);
-        });
-        req.on('error', function (err) {
-            reject(err);
-        });
-        // Get progress if callback exists
-        if (config.hasOwnProperty("onProgress")) {
-            req.on('data', function (chunk) {
-                // Update the received bytes.
-                received_bytes += chunk.length;
-                if (received_bytes <= total_bytes) {
-                    config.onProgress(received_bytes, total_bytes);
-                }
-            });
-        }
-        else {
-            req.on('data', function (chunk) {
-                // Update the received bytes.
-                received_bytes += chunk.length;
-            });
-        }
-        if (config.hasOwnProperty("onFinish")) {
-            req.on('end', function () {
-                resolve();
-            });
-        }
-        else {
-            req.on('end', function () {
-                resolve();
-            });
-        }
-    });
-}
 /**
  * Returns just the file size in bytes.
  */
@@ -159,7 +81,8 @@ function headerFileSize(url) {
         });
     });
 }
-function YTDownloadAudioCustom(config, url, file_name) {
+function YTDownloadAudioCustom(url, file_name, config) {
+    if (config === void 0) { config = {}; }
     return new Promise(function (resolve, reject) {
         // Save variable to know progress
         var received_bytes = 0;
@@ -175,7 +98,6 @@ function YTDownloadAudioCustom(config, url, file_name) {
                 req.on('data', function (chunk) {
                     // Update the received bytes.
                     received_bytes += chunk.length;
-                    console.log(received_bytes + '/' + total_bytes);
                     if (received_bytes <= total_bytes) {
                         config.onProgress(received_bytes, total_bytes);
                     }
@@ -206,15 +128,40 @@ function YTDownloadAudioCustom(config, url, file_name) {
     });
 }
 ;
-var Versions = new Vue({
-    el: '#Versions',
-    data: {
-        node_version: process.versions.node,
-        chrome_version: process.versions.chrome,
-        electron_version: process.versions.electron,
-        vue_version: Vue.version
+// let Versions = new Vue({
+//     el: '#Versions',
+//     data: {
+//         node_version: process.versions.node,
+//         chrome_version: process.versions.chrome,
+//         electron_version: process.versions.electron,
+//         vue_version: Vue.version
+//     }
+// });
+var AudlFileMeta = (function () {
+    function AudlFileMeta(id, audioUrl, youtubeUrl, ext, title, locFile, size, encoding, bitrate, thumbnail_url, prog) {
+        if (prog === void 0) { prog = null; }
+        // Set later.
+        this.downloaded = false;
+        this.error0 = "";
+        this.received = 0;
+        this.prog = null;
+        this.id = id;
+        this.audioUrl = audioUrl;
+        this.youtubeUrl = youtubeUrl;
+        this.ext = ext;
+        this.title = title;
+        this.locFile = locFile;
+        this.size = size;
+        this.encoding = encoding;
+        this.bitrate = bitrate;
+        this.thumbnail_url = thumbnail_url;
+        this.prog = prog;
     }
-});
+    AudlFileMeta.prototype.setProgress = function (prog) {
+        this.prog = prog;
+    };
+    return AudlFileMeta;
+}());
 var store = new Vuex.Store({
     state: {
         folders: { default_folder: BASEPATH },
@@ -232,6 +179,16 @@ var store = new Vuex.Store({
             var i = payload.index;
             state.files[i].downloaded = true;
         },
+        UPDATE: function (state, payload) {
+            var i = payload.index;
+            if (payload.received) {
+                console.log(payload.received);
+                state.files[i].received = payload.received;
+            }
+            if (payload.prog) {
+                state.files[i].prog = payload.prog;
+            }
+        },
         CLEAR_FILE: function (state, payload) {
             state.files.splice(payload.index, 1);
         },
@@ -243,74 +200,6 @@ var store = new Vuex.Store({
         }
     }
 });
-// let prog = new Progress('#test');
-// let config = {
-//     onProgress: (received, total) => {
-//         // let tick = parseFloat((received / total).toFixed(2));
-//         prog.tick();
-//     },
-//     onFinish: () => {
-//         prog.finish();
-//     }
-// }
-// const test = `C:\\Users\\tadachi\\Desktop\\test.m4a`;
-// YTDownloadAudioCustom(config, 'https://www.youtube.com/watch?v=RyoMQg3d5cs', test);
-// let timer = new Timer();
-// timer.addInterval(setInterval(() => {
-// }, 1000));
-// timer.addInterval(setInterval(() => {
-//     console.log('test2');
-// }, 3000));
-// setTimeout(() => {
-//     timer.clearAllIntervals()
-//     console.log('timers cleared');
-// }, 7000);
-var AudlFileMeta = (function () {
-    function AudlFileMeta(id, audioUrl, youtubeUrl, ext, title, locFile, size, encoding, bitrate) {
-        // Set later.
-        this.downloaded = false;
-        this.error0 = "";
-        this.id = id;
-        this.audioUrl = audioUrl;
-        this.youtubeUrl = youtubeUrl;
-        w;
-        this.ext = ext;
-        this.title = title;
-        this.locFile = locFile;
-        this.size = size;
-        this.encoding = encoding;
-        this.bitrate = bitrate;
-    }
-    return AudlFileMeta;
-}());
-audl.getInfo('https://www.youtube.com/watch?v=gXv57X7N510').then(function (info) {
-    var audio_file_meta = new audl.YTAudioFileMeta(info);
-    var title = info.title.replace(/[^a-z]+/gi, '_').toLowerCase(); // music_title.
-    var formats = audio_file_meta.formats;
-    var itag_info = [];
-    function push(itag) {
-        itag_info.push({
-            title: title,
-            itag: formats[itag].itag.toString(),
-            encoding: formats[itag].audioEncoding.toString(),
-            bitrate: formats[itag].audioBitrate.toString(),
-            url: formats[itag].url
-        });
-    }
-    for (var itag in formats) {
-        var found = false;
-        if (itag === '139')
-            push(itag);
-        if (itag === '140')
-            push(itag);
-        if (itag === '141')
-            push(itag);
-    }
-    headerFileSize(itag_info[0].url).then(function (info) {
-        console.log(bytes(info, { unit: 'MB' }));
-    });
-    console.table(itag_info);
-});
 var Files = new Vue({
     el: '#Files',
     data: {
@@ -318,7 +207,6 @@ var Files = new Vue({
         files: store.state.files,
         default_folder: store.state.folders.default_folder
     },
-    store: store,
     methods: {
         addUrls: function () {
             var _this = this;
@@ -326,11 +214,11 @@ var Files = new Vue({
             var promises_headers = [];
             var promises_meta = [];
             for (var i = 0; i < batch_urls.length; i++) {
-                promises_meta.push(audl.getInfo(batch_urls[i]));
+                promises_meta.push(audl_1.getInfo(batch_urls[i]));
             }
             var e = 0;
             Promise.map(promises_meta, function (info) {
-                var audio_file_meta = new audl.YTAudioFileMeta(info);
+                var audio_file_meta = new audl_1.YTAudioFileMeta(info);
                 var formats = audio_file_meta.formats;
                 var div = shortid.generate();
                 var audioUrl = formats['140'].url;
@@ -340,11 +228,18 @@ var Files = new Vue({
                 var locFile = path.join(_this.default_folder, (title + ext)); // C://User/Desktop/music_title.m4a
                 var encoding = formats['140'].audioEncoding.toString();
                 var bitrate = formats['140'].audioBitrate.toString();
+                var thumbnail_url = info.thumbnail_url;
                 headerFileSize(audioUrl).then(function (size) {
-                    var data = new AudlFileMeta(div, audioUrl, youtubeUrl, ext, title, locFile, size, encoding, bitrate);
-                    console.log(data);
+                    var data = new AudlFileMeta(div, audioUrl, youtubeUrl, ext, title, locFile, size, encoding, bitrate, thumbnail_url);
                     store.commit('ADD_URLS', { data: data });
-                    e++;
+                }).then(function () {
+                    // Add progress bar after DOM is updated with nextTick();
+                    Vue.nextTick(function () {
+                        var prog = new Progress('#' + div);
+                        store.commit('UPDATE', { index: e, prog: prog });
+                        prog.finish();
+                        e++;
+                    });
                 });
             }, { concurrency: 1 }).error(function (err) {
                 console.log(err);
@@ -353,22 +248,24 @@ var Files = new Vue({
         },
         startDownload: function (index) {
             var file = this.files[index];
-            var prog = new Progress('#' + file.id);
-            var config = {
-                localFile: file.locFile,
-                onProgress: function (received, total) {
-                    // let tick = (received / total).toFixed(2);
-                    prog.tick();
-                },
-                onFinish: function () {
-                    prog.finish();
-                }
-            };
-            YTDownloadAudioCustom(config, file.url, file.locFile).then(function () {
-                store.commit('SET_FILE_DOWNLOADED', { index: index });
-            })["catch"](function (e) {
-                store.commit('SET_FILE_ERROR', { index: index, e: e.message });
-            });
+            file.prog.finish();
+            store.commit('SET_FILE_DOWNLOADED', { index: index });
+            // let config = {
+            //     localFile: file.locFile,
+            //     onProgress: (received, total) => {
+            //         let tick = (received / total).toFixed(2);
+            //         store.commit('UPDATE', {index: index, received: received});
+            //         prog.tick();
+            //     },
+            //     onFinish: () => {
+            //         prog.finish();
+            //     }
+            // }
+            // YTDownloadAudioCustom(file.youtubeUrl, file.locFile, config).then(() => {
+            //     store.commit('SET_FILE_DOWNLOADED', { index: index });
+            // }).catch((e) => {
+            //     store.commit('SET_FILE_ERROR', { index: index, e: e.message });
+            // });
         },
         clearFile: function (index) {
             store.commit('CLEAR_FILE', { index: index });
@@ -386,10 +283,11 @@ var Files = new Vue({
         }
     }
 });
+Files.addUrls();
 var Debug = new Vue({
     el: '#debug',
     data: {
         state: store.state
     },
-    template: "\n    <div class=\"debug\">\n        <div>\n            {{state.folders.default_folder}}\n        </div>\n        <br />\n        <div v-for=\"(file,index) in state.files\">\n        {{index}} {{file.id}}<br />\n        {{file.title}}<br />\n        {{file.youtubeUrl}}<br />\n        {{file.locFile}}<br />\n        {{file.size}}<br />\n        {{file.encoding}}<br />\n        {{file.bitrate}}<br />\n        ___________\n        </div>\n    </div>\n    "
+    template: "\n    <div class=\"debug\">\n        <div>\n            {{state.folders.default_folder}}\n        </div>\n        <br />\n        <div v-for=\"(file,index) in state.files\">\n        {{index}} {{file.id}}<br />\n        {{file.title}}<br />\n        {{file.youtubeUrl}}<br />\n        {{file.locFile}}<br />\n        {{file.encoding}}<br />\n        {{file.bitrate}}<br />\n        {{file.thumbnail_url}}<br />\n        {{file.downloaded}}<br />\n        {{file.received}} / {{file.size}}<br />\n        ___________\n        </div>\n    </div>\n    "
 });
