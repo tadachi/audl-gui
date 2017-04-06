@@ -8,71 +8,21 @@
 </head>
 
 <body>
-  <!--<div id="Versions">
-    <div class="flex_container">
-      <div class="table">
-        <div class="tr th">
-          <div class="td">
-            Libs
-          </div>
-          <div class="td">
-            Version
-          </div>
-        </div>
-        <div class="tr">
-          <div class="td-center">
-            Node
-          </div>
-          <div class="td-center">
-            {{node_version}}
-          </div>
-        </div>
-        <div class="tr">
-          <div class="td-center">
-            Chrome
-          </div>
-          <div class="td-center">
-            {{chrome_version}}
-          </div>
-        </div>
-        <div class="tr">
-          <div class="td-center">
-            Electron
-          </div>
-          <div class="td-center">
-            {{electron_version}}
-          </div>
-        </div>
-        <div class="tr">
-          <div class="td-center">
-            Vue
-          </div>
-          <div class="td-center">
-            {{vue_version}}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>-->
-
   <div id="Files">
     <div class="flex_container">
-      <textarea placeholder="youtube urls" v-model="urls" rows="5">
+      <textarea placeholder="youtube urls" v-model="urls" rows="5" style="resize: vertical;">
 
       </textarea>
-      <!--<button type="button" v-on:click="addUrls()">addUrls</button>
-      <button type="button" v-on:click="clearAllFiles()">removeAllFile</button>
-      <button type="button" v-on:click="changeDefaultFolder">openDirectory</button>-->
-      <a href="#" v-on:click="addUrls()">addUrls</a>
-      <a href="#" v-on:click="clearAllFiles()">removeAllFile</a>
-      <a href="#" v-on:click="changeDefaultFolder()">openDirectory</a>
+      <div class="item"><a class="text-button" href="#" v-on:click="addUrls()">Add Downloads</a></div>
+      <div class="item"><a class="text-button" href="#" v-on:click="clearAllFiles()">Remove all Downloads</a></div>
+      <div class="item"><a class="text-button" href="#" v-on:click="changeDefaultFolder()">Change Directory</a></div>
     </div>
 
     <div class="flex_container">
       <div class="table">
         <div class="tr th">
           <div class="td-center">
-            thumbnail
+            Downloads
           </div>
         </div>
         <div class="tr" v-for="(file,index) in files">
@@ -87,9 +37,9 @@
               <!--<button type="button" v-on:click="clearFile(index)">Remove</button>
               <button type="button" v-on:click="startDownload(index)">Start</button>-->
               <div class="item-container-row">
-                <a href="#" class="item" v-on:click="startDownload(index)">Start</a>
-                <a href="#" class="item" v-on:click="Show in Folder" v-if="file.downloaded">Show in Folder</a>
-                <a href="#" class="item" v-on:click="clearFile(index)">Remove</a>
+                <a href="#" class="item text-button" v-on:click="startDownload(index)" v-if="!file.downloaded">Start</a>
+                <a href="#" class="item text-button" v-on:click="showInFolder(index)" v-if="file.downloaded">Show in Folder</a>
+                <a href="#" class="item text-button" v-on:click="clearFile(index)">Remove</a>
               </div>
             </div>
           </div>
