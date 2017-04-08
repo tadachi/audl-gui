@@ -13,6 +13,17 @@ export function getInfo(url): Promise<any> {
     })
 }
 
+export function valid_youtube_match(url) {
+    let youtube_valid_regexp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*).*/;
+    let match = url.match(youtube_valid_regexp);
+    if (match && match[2].length == 11) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 interface AudioFileFormatsInterface {
     itag: number;
     container: string;
@@ -62,7 +73,7 @@ export class YTAudioFileMeta implements AudioFileMetaInterface {
         this.length_seconds = Number(data.length_seconds);
         this.description = data.description;
         this.view_count = Number(data.view_count);
-        this.url  = data.url;
+        this.url = data.url;
         this.formats = {};
         for (let format of data.formats) {
             this.formats[format.itag] = format;

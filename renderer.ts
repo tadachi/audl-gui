@@ -13,7 +13,7 @@ import Promise = require('bluebird');
 import bytes = require('bytes');
 
 // Audl
-import { getInfo, YTAudioFileMeta } from "./audl";
+import { getInfo, YTAudioFileMeta, valid_youtube_match } from "./audl";
 
 
 // Vue
@@ -200,9 +200,9 @@ class AudlFileMeta {
 const store: any = new Vuex.Store({
     state: {
         folders: { default_folder: BASEPATH },
-        files: new Array<AudlFileMeta>()
+        files: new Array<AudlFileMeta>(),
+        urls: ["https://www.youtube.com/watch?v=9bZkp7q19f0", "https://www.youtube.com/watch?v=DzivgKuhNl4", null, null, null]
     },
-
     mutations: {
         ADD_URLS(state, payload): void {
             state.files.push(payload.data);
@@ -224,6 +224,19 @@ const store: any = new Vuex.Store({
                 state.files[i].prog = payload.prog;
             }
         },
+        ADD_URL(state, payload): void {
+            state.urls.push(payload.value);
+        },
+        SET_URLS(state, payload): void {
+            state.urls = payload.urls;
+        },
+        UPDATE_URL(state, payload): void {
+            const i = payload.index;
+            state.urls[i] = payload.value;
+        },
+        REMOVE_URL(state, payload): void {
+            state.urls.splice(payload.index, 1);
+        },
         CLEAR_FILE(state, payload): void {
             state.files.splice(payload.index, 1);
         },
@@ -239,20 +252,69 @@ const store: any = new Vuex.Store({
 let Files = new Vue({
     el: '#Files',
     data: {
-//         urls: `https://www.youtube.com/watch?v=9bZkp7q19f0
-// https://www.youtube.com/watch?v=DzivgKuhNl4`,
-        urls: ``,
+        urls: store.state.urls,
         files: store.state.files,
         default_folder: store.state.folders.default_folder,
+        batch: "", // This will be set with computed in the created() lifecycle hook.
+        batch_error: null
     },
+    created() {
+        this.batch = this.formatted_urls;
+    },
+    computed: { // computed does not like () => {}, use function() {} 
+        formatted_urls: function () {
+            let batch_text: string = ""
+            for (let string of store.state.urls) {
+                if (string)
+                    batch_text = batch_text + string + '\n'
+            }
+            return batch_text;
+        }
+    },
+
     methods: {
+        addInput(): void {
+            store.commit('ADD_URL', { value: "" });
+            this.urls = store.state.urls;
+        },
+        removeInput(index): void {
+            store.commit('REMOVE_URL', { index: index });
+            this.urls = store.state.urls;
+
+        },
+        updateUrl(index, value) {
+            store.commit('UPDATE_URL', { index: index, value: value });
+            this.urls = store.state.urls;
+            this.syncInputToBatch();
+        },
+        updateBatch(value) {
+            let clean_urls = value.toString().split(/[,\n\r]+/).filter(v => v != ""); // Split on , \n \r, and filter out empty strings
+            // Make sure there is at least one input. Always have one element.
+            if (clean_urls.length <= 0) {
+                clean_urls = [""];
+            }
+            store.commit('SET_URLS', { urls: clean_urls });
+            this.urls = store.state.urls;
+        },
+        batchAdd() {
+            // console.log(value);
+        },
+        syncInputToBatch() {
+            let batch_text: string = ""
+            for (let string of this.urls) {
+                if (string)
+                    batch_text = batch_text + string + '\n'
+            }
+            this.batch = batch_text;
+        },
         addUrls(): void {
-            let batch_urls = this.urls.split('\n');
             let promises_headers = [];
             let promises_meta = [];
 
-            for (let i = 0; i < batch_urls.length; i++) {
-                promises_meta.push(getInfo(batch_urls[i]));
+            for (let i = 0; i < this.urls.length; i++) {
+                // Check if valid youtube url.
+                if (this.urls[i] != "")
+                    promises_meta.push(getInfo(this.urls[i]));
             }
 
             Promise.map(promises_meta, (info) => {
@@ -281,11 +343,11 @@ let Files = new Vue({
                     Vue.nextTick(() => {
                         // let prog = new Progress('#' + div);
                         // store.commit('UPDATE', { index: (this.files.length-1), prog: prog })
-                        this.e++;
+                        // this.e++;
                     })
                 });
 
-            },{concurrency: 1}).error((err) => {
+            }, { concurrency: 1 }).error((err) => {
                 console.log(err);
             });
         },
@@ -300,8 +362,6 @@ let Files = new Vue({
                         store.commit('UPDATE', { index: index, received: bytes(received, 'MB') });
                         // this.files[index].prog.tick();
                     });
-                    
-
                 },
                 onFinish: () => {
                     Vue.nextTick(() => {
@@ -334,7 +394,7 @@ let Files = new Vue({
     }
 });
 
-Files.addUrls();
+// Files.addUrls();
 
 const Debug = new Vue({
     el: '#debug',
@@ -347,16 +407,19 @@ const Debug = new Vue({
     },
     template:
     `
-    <div class="debug">
-        <div>
+<div class="debug">
+    <div>
         <pre>
 {{state.folders.default_folder}}
 Node: {{node_version}}
 Chrome: {{chrome_version}}
 Vue: {{vue_version}}
-        </pre>        
-        </div>
-        <div v-for="(file,index) in state.files">
+        </pre>
+    </div>
+    <div v-for="(url, index) in state.urls">
+{{index}} {{url}}  
+    </div>
+    <div v-for="(file,index) in state.files">
         <pre>
 {{index}} 
 #{{file.id}}
@@ -368,9 +431,9 @@ Vue: {{vue_version}}
 {{file.thumbnail_url}}
 {{file.downloaded}}
 {{file.received}} / {{file.size}}
-{{file.error0}}
+{{file.error0}} 
         </pre>
-        </div>
     </div>
+</div>
     `
 })

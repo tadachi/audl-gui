@@ -10,12 +10,23 @@
 <body>
   <div id="Files">
     <div class="flex_container">
-      <textarea placeholder="youtube urls" v-model="urls" rows="5" style="resize: vertical;">
 
-      </textarea>
+      <div class="item" v-for="(url,index) in urls">
+        <input ref="input" v-on:input="updateUrl(index, $event.target.value)" v-on:blur="updateUrl(index, $event.target.value)" v-bind:value="url"
+          placeholder="Youtube URL.." size="55">
+        <a class="text-button" href="#" v-on:click="addInput()">Add</a>
+        <a class="text-button" href="#" v-on:click="removeInput(index)">Remove</a>
+      </div>
+
+      <textarea placeholder="youtube urls" v-on:input="updateBatch($event.target.value)" v-model="batch" rows="5" style="resize: vertical; margin: 5px;"></textarea>
+      
+      <div class="item" style="color: red">{{batch_error}}</div>
+      <div class="item"><a class="text-button" href="#" v-on:click="batchAdd(batch)">Batch Add</a></div>
       <div class="item"><a class="text-button" href="#" v-on:click="addUrls()">Add Downloads</a></div>
       <div class="item"><a class="text-button" href="#" v-on:click="clearAllFiles()">Remove all Downloads</a></div>
-      <div class="item"><a class="text-button" href="#" v-on:click="changeDefaultFolder()">Change Directory</a></div>
+      <div class="item">
+        <a class="text-button" href="#" v-on:click="changeDefaultFolder()">Change Directory</a> {{default_folder}}
+      </div>
     </div>
 
     <div class="flex_container">
