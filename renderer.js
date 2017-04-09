@@ -254,9 +254,6 @@ var Files = new Vue({
             store.commit('SET_URLS', { urls: clean_urls });
             this.urls = store.state.urls;
         },
-        batchAdd: function () {
-            // console.log(value);
-        },
         syncInputToBatch: function () {
             var batch_text = "";
             for (var _i = 0, _a = this.urls; _i < _a.length; _i++) {
@@ -272,7 +269,7 @@ var Files = new Vue({
             var promises_meta = [];
             for (var i = 0; i < this.urls.length; i++) {
                 // Check if valid youtube url.
-                if (this.urls[i] != "")
+                if (this.urls[i] != null && this.urls[i] != "")
                     promises_meta.push(audl_1.getInfo(this.urls[i]));
             }
             Promise.map(promises_meta, function (info) {

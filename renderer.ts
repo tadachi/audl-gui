@@ -296,9 +296,6 @@ let Files = new Vue({
             store.commit('SET_URLS', { urls: clean_urls });
             this.urls = store.state.urls;
         },
-        batchAdd() {
-            // console.log(value);
-        },
         syncInputToBatch() {
             let batch_text: string = ""
             for (let string of this.urls) {
@@ -310,10 +307,10 @@ let Files = new Vue({
         addUrls(): void {
             let promises_headers = [];
             let promises_meta = [];
-
+            
             for (let i = 0; i < this.urls.length; i++) {
                 // Check if valid youtube url.
-                if (this.urls[i] != "")
+                if (this.urls[i] != null && this.urls[i] != "")
                     promises_meta.push(getInfo(this.urls[i]));
             }
 

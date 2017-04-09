@@ -3,33 +3,32 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Hello World!</title>
+  <title>Audl</title>
   <link rel="stylesheet" type="text/css" href="./styles.css">
 </head>
 
-<body>
+<body class="body">
   <div id="Files">
     <div class="flex_container">
 
-      <div class="item" v-for="(url,index) in urls">
-        <input ref="input" v-on:input="updateUrl(index, $event.target.value)" v-on:blur="updateUrl(index, $event.target.value)" v-bind:value="url"
+      <div class="item-last" v-for="(url,index) in urls">
+        <input class="inputs" ref="input" v-on:input="updateUrl(index, $event.target.value)" v-on:blur="updateUrl(index, $event.target.value)" v-bind:value="url"
           placeholder="Youtube URL.." size="55">
-        <a class="text-button" href="#" v-on:click="addInput()">Add</a>
-        <a class="text-button" href="#" v-on:click="removeInput(index)">Remove</a>
+        <a class="text-button-light" href="#" v-on:click="addInput()">Add</a>
+        <a class="text-button-light" href="#" v-on:click="removeInput(index)">Remove</a>
       </div>
 
-      <textarea placeholder="youtube urls" v-on:input="updateBatch($event.target.value)" v-model="batch" rows="5" style="resize: vertical; margin: 5px;"></textarea>
-      
+      <textarea class="inputs item-last" placeholder="youtube urls" v-on:input="updateBatch($event.target.value)" v-model="batch" rows="5" style="resize: vertical; margin: 5px;"></textarea>
+
       <div class="item" style="color: red">{{batch_error}}</div>
-      <div class="item"><a class="text-button" href="#" v-on:click="batchAdd(batch)">Batch Add</a></div>
-      <div class="item"><a class="text-button" href="#" v-on:click="addUrls()">Add Downloads</a></div>
-      <div class="item"><a class="text-button" href="#" v-on:click="clearAllFiles()">Remove all Downloads</a></div>
-      <div class="item">
-        <a class="text-button" href="#" v-on:click="changeDefaultFolder()">Change Directory</a> {{default_folder}}
+      <div class="item"><a class="text-button-light" href="#" v-on:click="addUrls()">Add Downloads</a></div>
+      <div class="item"><a class="text-button-light" href="#" v-on:click="clearAllFiles()">Remove all Downloads</a></div>
+      <div class="item-last">
+        <a class="text-button-light" href="#" v-on:click="changeDefaultFolder()">Change Directory</a><span style="margin-left: 20px;">{{default_folder}}</span>
       </div>
     </div>
 
-    <div class="flex_container">
+    <div class="flex_container" v-if="files.length > 0">
       <div class="table">
         <div class="tr th">
           <div class="td-center">
@@ -40,17 +39,17 @@
           <div class="td item-container-row">
             <div class="item-thumb"><img v-bind:src="file.thumbnail_url" height="50" width="80"></div>
             <div class="item-container-column">
-              <div class="item">{{file.title}}</div>
-              <div class="item">{{file.locFile}}</div>
-              <div class="item">{{file.youtubeUrl}}</div>
-              <div class="item" v-bind:id="file.id"></div>
-              <div class="item">{{file.received}} / {{file.size}}</div>
+              <div class="item medium-text" style="margin-bottom: 3px">{{file.title}}</div>
+              <div class="item small-text">{{file.locFile}}</div>
+              <div class="item small-text">{{file.youtubeUrl}}</div>
+              <div class="item small-text" v-bind:id="file.id"></div>
+              <div class="item small-text">{{file.received}} / {{file.size}}</div>
               <!--<button type="button" v-on:click="clearFile(index)">Remove</button>
               <button type="button" v-on:click="startDownload(index)">Start</button>-->
               <div class="item-container-row">
-                <a href="#" class="item text-button" v-on:click="startDownload(index)" v-if="!file.downloaded">Start</a>
-                <a href="#" class="item text-button" v-on:click="showInFolder(index)" v-if="file.downloaded">Show in Folder</a>
-                <a href="#" class="item text-button" v-on:click="clearFile(index)">Remove</a>
+                <a href="#" class="item text-button-dark" v-on:click="startDownload(index)" v-if="!file.downloaded">Start</a>
+                <a href="#" class="item text-button-dark" v-on:click="showInFolder(index)" v-if="file.downloaded">Show in Folder</a>
+                <a href="#" class="item text-button-dark" v-on:click="clearFile(index)">Remove</a>
               </div>
             </div>
           </div>
