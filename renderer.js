@@ -24,6 +24,8 @@ var dialog = electron.remote.dialog;
 var app = electron.remote.app;
 var shell = electron.remote.shell;
 var BASEPATH = app.getAppPath();
+var NOT_VALID_YOUTUBE_URL = "Not a Valid Youtube URL.";
+var VALID_YOUTUBE_URL = "Valid Youtube URL.";
 var Progress = (function () {
     function Progress(div) {
         this._div = div;
@@ -215,10 +217,11 @@ var Files = new Vue({
         files: store.state.files,
         default_folder: store.state.folders.default_folder,
         batch: "",
-        batch_error: null
+        line_errors: new Array(store.state.urls.length)
     },
     created: function () {
         this.batch = this.formatted_urls;
+        this.validate_urls;
     },
     computed: {
         formatted_urls: function () {
@@ -229,19 +232,48 @@ var Files = new Vue({
                     batch_text = batch_text + string + '\n';
             }
             return batch_text;
+        },
+        validate_urls: function () {
+            for (var i = 0; i < this.urls.length; i++) {
+                var url = this.urls[i];
+                var valid = audl_1.valid_youtube_match(url);
+                if (url == null || url == "") {
+                    this.line_errors[i] = { msg: "", error: false };
+                }
+                else if (!valid) {
+                    this.line_errors[i] = { msg: NOT_VALID_YOUTUBE_URL, error: true };
+                }
+                else if (valid) {
+                    this.line_errors[i] = { msg: VALID_YOUTUBE_URL, error: false };
+                }
+            }
         }
     },
     methods: {
         addInput: function () {
             store.commit('ADD_URL', { value: "" });
+            this.line_errors.push({ msg: "", error: false });
             this.urls = store.state.urls;
         },
         removeInput: function (index) {
             store.commit('REMOVE_URL', { index: index });
             this.urls = store.state.urls;
+            this.line_errors.splice(index, 1);
         },
-        updateUrl: function (index, value) {
-            store.commit('UPDATE_URL', { index: index, value: value });
+        updateUrl: function (index, url) {
+            var valid = audl_1.valid_youtube_match(url);
+            if (url == null || url == "") {
+                store.commit('UPDATE_URL', { index: index, value: url });
+                this.line_errors[index] = { msg: "", error: false };
+            }
+            else if (!valid) {
+                store.commit('UPDATE_URL', { index: index, value: url });
+                this.line_errors[index] = { msg: NOT_VALID_YOUTUBE_URL, error: true };
+            }
+            else if (valid) {
+                store.commit('UPDATE_URL', { index: index, value: url });
+                this.line_errors[index] = { msg: VALID_YOUTUBE_URL, error: false };
+            }
             this.urls = store.state.urls;
             this.syncInputToBatch();
         },
@@ -253,6 +285,8 @@ var Files = new Vue({
             }
             store.commit('SET_URLS', { urls: clean_urls });
             this.urls = store.state.urls;
+            this.line_errors = new Array(this.urls.length);
+            this.validate_urls; // Keep this in sync with this.urls
         },
         syncInputToBatch: function () {
             var batch_text = "";
@@ -265,14 +299,35 @@ var Files = new Vue({
         },
         addUrls: function () {
             var _this = this;
+            // Error check before we do anything.
+            var error = false;
+            if (this.urls.length != this.line_errors.length) {
+                this.youtube_error = "Number of URLs do not match number of line_errors.";
+                return;
+            }
+            for (var i = 0; i < this.urls.length; i++) {
+                var url = this.urls[i];
+                if (url === null || url === "" || audl_1.valid_youtube_match(url)) {
+                    continue;
+                }
+                else {
+                    this.line_errors[i] = { msg: NOT_VALID_YOUTUBE_URL, error: true };
+                    error = true;
+                }
+            }
+            if (error) {
+                return;
+            } // Error found. 
             var promises_headers = [];
             var promises_meta = [];
             for (var i = 0; i < this.urls.length; i++) {
-                // Check if valid youtube url.
-                if (this.urls[i] != null && this.urls[i] != "")
-                    promises_meta.push(audl_1.getInfo(this.urls[i]));
+                var url = this.urls[i];
+                console.log(url);
+                if (url != undefined && url != null && this.urls[i] != "")
+                    promises_meta.push(audl_1.getInfo(url));
             }
             Promise.map(promises_meta, function (info) {
+                console.log(info);
                 var audio_file_meta = new audl_1.YTAudioFileMeta(info);
                 var formats = audio_file_meta.formats;
                 var div = shortid.generate();
@@ -290,11 +345,11 @@ var Files = new Vue({
                     store.commit('ADD_URLS', { data: data });
                 }).then(function () {
                     // Add progress bar after DOM is updated with nextTick();
-                    Vue.nextTick(function () {
-                        // let prog = new Progress('#' + div);
-                        // store.commit('UPDATE', { index: (this.files.length-1), prog: prog })
-                        // this.e++;
-                    });
+                    // Vue.nextTick(() => {
+                    // let prog = new Progress('#' + div);
+                    // store.commit('UPDATE', { index: (this.files.length-1), prog: prog })
+                    // this.e++;
+                    // })
                 });
             }, { concurrency: 1 }).error(function (err) {
                 console.log(err);

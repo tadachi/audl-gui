@@ -16,16 +16,18 @@
           placeholder="Youtube URL.." size="55">
         <a class="text-button-light" href="#" v-on:click="addInput()">Add</a>
         <a class="text-button-light" href="#" v-on:click="removeInput(index)">Remove</a>
+        <span class="error" v-if="line_errors[index].error" style="margin-left: 5px;">{{line_errors[index].msg}}</span>
+        <span class="valid" v-if="!line_errors[index].error" style="margin-left: 5px;">{{line_errors[index].msg}}</span>
       </div>
 
       <textarea class="inputs item-last" placeholder="youtube urls" v-on:input="updateBatch($event.target.value)" v-model="batch" rows="5" style="resize: vertical; margin: 5px;"></textarea>
 
-      <div class="item" style="color: red">{{batch_error}}</div>
       <div class="item"><a class="text-button-light" href="#" v-on:click="addUrls()">Add Downloads</a></div>
       <div class="item"><a class="text-button-light" href="#" v-on:click="clearAllFiles()">Remove all Downloads</a></div>
       <div class="item-last">
         <a class="text-button-light" href="#" v-on:click="changeDefaultFolder()">Change Directory</a><span style="margin-left: 20px;">{{default_folder}}</span>
       </div>
+      
     </div>
 
     <div class="flex_container" v-if="files.length > 0">
@@ -44,18 +46,25 @@
               <div class="item small-text">{{file.youtubeUrl}}</div>
               <div class="item small-text" v-bind:id="file.id"></div>
               <div class="item small-text">{{file.received}} / {{file.size}}</div>
-              <!--<button type="button" v-on:click="clearFile(index)">Remove</button>
-              <button type="button" v-on:click="startDownload(index)">Start</button>-->
               <div class="item-container-row">
-                <a href="#" class="item text-button-dark" v-on:click="startDownload(index)" v-if="!file.downloaded">Start</a>
-                <a href="#" class="item text-button-dark" v-on:click="showInFolder(index)" v-if="file.downloaded">Show in Folder</a>
-                <a href="#" class="item text-button-dark" v-on:click="clearFile(index)">Remove</a>
+                <a href="#" class="item text-button-light" v-on:click="startDownload(index)" v-if="!file.downloaded">Start</a>
+                <a href="#" class="item text-button-light" v-on:click="showInFolder(index)" v-if="file.downloaded">Show in Folder</a>
+                <a href="#" class="item text-button-light" v-on:click="clearFile(index)">Remove</a>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <pre>
+  batch
+{{batch}}
+  line_errors
+{{line_errors}}
+  youtube_error
+{{youtube_error}}
+    </pre>
+ 
   </div>
 
   <div id="debug"></div>
@@ -65,7 +74,6 @@
 <script>
   // You can also require other files to run in this process
   require('./renderer.js')
-
 </script>
 
 </html>

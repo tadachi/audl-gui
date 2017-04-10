@@ -29,6 +29,9 @@ const { app } = electron.remote;
 const { shell } = electron.remote;
 const BASEPATH: string = app.getAppPath();
 
+const NOT_VALID_YOUTUBE_URL: string = "Not a Valid Youtube URL.";
+const VALID_YOUTUBE_URL: string = "Valid Youtube URL.";
+
 class Progress {
     config: any;
     _div: string;
@@ -255,37 +258,65 @@ let Files = new Vue({
         urls: store.state.urls,
         files: store.state.files,
         default_folder: store.state.folders.default_folder,
-        batch: "", // This will be set with computed in the created() lifecycle hook.
-        batch_error: null
+        batch: "", // This will be set in the created() lifecycle hook.
+        line_errors: new Array(store.state.urls.length),
     },
     created() {
         this.batch = this.formatted_urls;
+        this.validate_urls;
     },
     computed: { // computed does not like () => {}, use function() {} 
-        formatted_urls: function () {
+        formatted_urls: function (): string {
             let batch_text: string = ""
             for (let string of store.state.urls) {
                 if (string)
                     batch_text = batch_text + string + '\n'
             }
             return batch_text;
+        },
+        validate_urls: function (): void {
+            for (let i = 0; i < this.urls.length; i++) {
+                const url = this.urls[i];
+                const valid: boolean = valid_youtube_match(url);
+
+                if (url == null || url == "") {
+                    this.line_errors[i] = { msg: "", error: false }
+                } else if (!valid) {
+                    this.line_errors[i] = { msg: NOT_VALID_YOUTUBE_URL, error: true };
+                } else if (valid) {
+                    this.line_errors[i] = { msg: VALID_YOUTUBE_URL, error: false };
+                }
+            }
         }
     },
-
     methods: {
         addInput(): void {
             store.commit('ADD_URL', { value: "" });
+            this.line_errors.push({ msg: "", error: false });
             this.urls = store.state.urls;
         },
         removeInput(index): void {
             store.commit('REMOVE_URL', { index: index });
             this.urls = store.state.urls;
-
+            this.line_errors.splice(index, 1);
         },
-        updateUrl(index, value) {
-            store.commit('UPDATE_URL', { index: index, value: value });
+        updateUrl(index, url) {
+            const valid = valid_youtube_match(url);
+
+            if (url == null || url == "") {
+                store.commit('UPDATE_URL', { index: index, value: url });
+                this.line_errors[index] = { msg: "", error: false };
+            } else if (!valid) {
+                store.commit('UPDATE_URL', { index: index, value: url });
+                this.line_errors[index] = { msg: NOT_VALID_YOUTUBE_URL, error: true };
+            } else if (valid) {
+                store.commit('UPDATE_URL', { index: index, value: url });
+                this.line_errors[index] = { msg: VALID_YOUTUBE_URL, error: false };
+            }
+
             this.urls = store.state.urls;
             this.syncInputToBatch();
+
         },
         updateBatch(value) {
             let clean_urls = value.toString().split(/[,\n\r]+/).filter(v => v != ""); // Split on , \n \r, and filter out empty strings
@@ -295,6 +326,8 @@ let Files = new Vue({
             }
             store.commit('SET_URLS', { urls: clean_urls });
             this.urls = store.state.urls;
+            this.line_errors = new Array<string>(this.urls.length); 
+            this.validate_urls // Keep this in sync with this.urls
         },
         syncInputToBatch() {
             let batch_text: string = ""
@@ -305,17 +338,36 @@ let Files = new Vue({
             this.batch = batch_text;
         },
         addUrls(): void {
+            // Error check before we do anything.
+            let error = false;
+            if (this.urls.length != this.line_errors.length) {
+                this.youtube_error = "Number of URLs do not match number of line_errors."
+                return;
+            }
+            for (let i = 0; i < this.urls.length; i++) {
+                const url: string = this.urls[i];
+                if (url === null || url === "" || valid_youtube_match(url)) {
+                    continue
+                } else {
+                    this.line_errors[i] = { msg: NOT_VALID_YOUTUBE_URL, error: true };
+                    error = true;
+                }
+            }
+            if (error) { return } // Error found. 
+
+
             let promises_headers = [];
             let promises_meta = [];
-            
+
             for (let i = 0; i < this.urls.length; i++) {
-                // Check if valid youtube url.
-                if (this.urls[i] != null && this.urls[i] != "")
-                    promises_meta.push(getInfo(this.urls[i]));
+                const url = this.urls[i];
+                console.log(url);
+                if (url != undefined && url != null && this.urls[i] != "")
+                    promises_meta.push(getInfo(url));
             }
 
             Promise.map(promises_meta, (info) => {
-
+                console.log(info);
                 const audio_file_meta = new YTAudioFileMeta(info);
                 const formats = audio_file_meta.formats;
                 const div: string = shortid.generate();
@@ -337,11 +389,11 @@ let Files = new Vue({
 
                 }).then(() => {
                     // Add progress bar after DOM is updated with nextTick();
-                    Vue.nextTick(() => {
-                        // let prog = new Progress('#' + div);
-                        // store.commit('UPDATE', { index: (this.files.length-1), prog: prog })
-                        // this.e++;
-                    })
+                    // Vue.nextTick(() => {
+                    // let prog = new Progress('#' + div);
+                    // store.commit('UPDATE', { index: (this.files.length-1), prog: prog })
+                    // this.e++;
+                    // })
                 });
 
             }, { concurrency: 1 }).error((err) => {

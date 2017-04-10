@@ -15,6 +15,9 @@ function getInfo(url) {
 }
 exports.getInfo = getInfo;
 function valid_youtube_match(url) {
+    if (!url) {
+        return false;
+    }
     var youtube_valid_regexp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*).*/;
     var match = url.match(youtube_valid_regexp);
     if (match && match[2].length == 11) {

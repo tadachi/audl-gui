@@ -1,5 +1,5 @@
 {
-  "name": "electron-quick-start",
+  "name": "audl-gui",
   "version": "0.0.0",
   "description": "A gui for audl",
   "main": "main.js",
@@ -22,8 +22,6 @@
   "dependencies": {
     "bluebird": "^3.5.0",
     "bytes": "^2.5.0",
-    "console.table": "^0.8.0",
-    "crypto": "0.0.3",
     "electron-dl": "^1.7.0",
     "electron-remote": "^1.1.2",
     "fs": "0.0.1-security",

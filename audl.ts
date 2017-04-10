@@ -14,6 +14,9 @@ export function getInfo(url): Promise<any> {
 }
 
 export function valid_youtube_match(url) {
+    if (!url) {
+        return false;
+    }
     let youtube_valid_regexp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*).*/;
     let match = url.match(youtube_valid_regexp);
     if (match && match[2].length == 11) {
