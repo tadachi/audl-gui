@@ -1,3 +1,11 @@
+#### Description
+
+Quickly and conveniently download music, podcasts or audio from Youtube.
+
+Has options for batch downloading and features an easy to use, simple GUI.
+
+Special thanks to [fent](https://github.com/fent/node-ytdl).
+
 #### Debugging
 
 ```bash
@@ -7,6 +15,10 @@ npm install
 npm start
 # Typescript compiler watch.
 tsc -w audl.ts renderer.ts
-# less compiler watch
-less-watch-compiler ./ ./ styles.less
+# less compile to css.
+lessc styles.less styles.css
 ```
+
+##### License
+
+MIT License

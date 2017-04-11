@@ -204,7 +204,7 @@ const store: any = new Vuex.Store({
     state: {
         folders: { default_folder: BASEPATH },
         files: new Array<AudlFileMeta>(),
-        urls: ["https://www.youtube.com/watch?v=9bZkp7q19f0", "https://www.youtube.com/watch?v=DzivgKuhNl4", null, null, null]
+        urls: [""]
     },
     mutations: {
         ADD_URLS(state, payload): void {
@@ -296,9 +296,13 @@ let Files = new Vue({
             this.urls = store.state.urls;
         },
         removeInput(index): void {
+            if (this.urls.length <= 1) { // Always have at least one item.
+                return;
+            }
             store.commit('REMOVE_URL', { index: index });
             this.urls = store.state.urls;
             this.line_errors.splice(index, 1);
+            this.syncInputToBatch();
         },
         updateUrl(index, url) {
             const valid = valid_youtube_match(url);
@@ -443,46 +447,44 @@ let Files = new Vue({
     }
 });
 
-// Files.addUrls();
-
-const Debug = new Vue({
-    el: '#debug',
-    data: {
-        state: store.state,
-        node_version: process.versions.node,
-        chrome_version: process.versions.chrome,
-        electron_version: process.versions.electron,
-        vue_version: Vue.version
-    },
-    template:
-    `
-<div class="debug">
-    <div>
-        <pre>
-{{state.folders.default_folder}}
-Node: {{node_version}}
-Chrome: {{chrome_version}}
-Vue: {{vue_version}}
-        </pre>
-    </div>
-    <div v-for="(url, index) in state.urls">
-{{index}} {{url}}  
-    </div>
-    <div v-for="(file,index) in state.files">
-        <pre>
-{{index}} 
-#{{file.id}}
-{{file.title}}
-{{file.youtubeUrl}}
-{{file.locFile}}
-{{file.encoding}}
-{{file.bitrate}}
-{{file.thumbnail_url}}
-{{file.downloaded}}
-{{file.received}} / {{file.size}}
-{{file.error0}} 
-        </pre>
-    </div>
-</div>
-    `
-})
+// const Debug = new Vue({
+//     el: '#debug',
+//     data: {
+//         state: store.state,
+//         node_version: process.versions.node,
+//         chrome_version: process.versions.chrome,
+//         electron_version: process.versions.electron,
+//         vue_version: Vue.version
+//     },
+//     template:
+//     `
+// <div class="debug">
+//     <div>
+//         <pre>
+// {{state.folders.default_folder}}
+// Node: {{node_version}}
+// Chrome: {{chrome_version}}
+// Vue: {{vue_version}}
+//         </pre>
+//     </div>
+//     <div v-for="(url, index) in state.urls">
+// {{index}} {{url}}  
+//     </div>
+//     <div v-for="(file,index) in state.files">
+//         <pre>
+// {{index}} 
+// #{{file.id}}
+// {{file.title}}
+// {{file.youtubeUrl}}
+// {{file.locFile}}
+// {{file.encoding}}
+// {{file.bitrate}}
+// {{file.thumbnail_url}}
+// {{file.downloaded}}
+// {{file.received}} / {{file.size}}
+// {{file.error0}} 
+//         </pre>
+//     </div>
+// </div>
+//     `
+// })

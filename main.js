@@ -15,7 +15,7 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({minwidth: 800, minheight: 600, maxWidth: 800})
+  mainWindow = new BrowserWindow({minwidth: 800, minheight: 600, maxWidth: 800, icon: __dirname + './icons/music-player.png'})
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
@@ -24,8 +24,8 @@ function createWindow () {
     slashes: true
   }))
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+  // Open the DevTools on startup.
+  // mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {

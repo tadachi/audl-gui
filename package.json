@@ -1,13 +1,13 @@
 {
   "name": "audl-gui",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A gui for audl",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
   "repository": "https://github.com/tadachi/audl-gui",
-  "keywords": [],
+  "keywords": ["audl", "gui", "audl-gui", "download youtube audio", "youtube audio"],
   "author": "tadachi",
   "license": "MIT",
   "devDependencies": {
