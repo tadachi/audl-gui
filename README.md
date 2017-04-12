@@ -1,3 +1,6 @@
+audl-gui
+=========
+
 #### Description
 
 Quickly and conveniently download music, podcasts or audio from Youtube.
@@ -5,6 +8,8 @@ Quickly and conveniently download music, podcasts or audio from Youtube.
 Has options for batch downloading and features an easy to use, simple GUI.
 
 Special thanks to [fent](https://github.com/fent/node-ytdl).
+
+![Screenshot](screenshot-01.png)
 
 #### Debugging
 

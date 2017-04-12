@@ -11,6 +11,7 @@ import shortid = require('shortid');
 import path = require('path');
 import Promise = require('bluebird');
 import bytes = require('bytes');
+import os = require('os');
 
 // Audl
 import { getInfo, YTAudioFileMeta, valid_youtube_match } from "./audl";
@@ -28,6 +29,7 @@ const { dialog } = electron.remote;
 const { app } = electron.remote;
 const { shell } = electron.remote;
 const BASEPATH: string = app.getAppPath();
+const HOMEDIR: string = os.homedir();
 
 const NOT_VALID_YOUTUBE_URL: string = "Not a Valid Youtube URL.";
 const VALID_YOUTUBE_URL: string = "Valid Youtube URL.";
@@ -202,7 +204,7 @@ class AudlFileMeta {
 
 const store: any = new Vuex.Store({
     state: {
-        folders: { default_folder: BASEPATH },
+        folders: { default_folder: HOMEDIR },
         files: new Array<AudlFileMeta>(),
         urls: [""]
     },

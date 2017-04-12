@@ -13,14 +13,14 @@
 
       <div class="item-last" v-for="(url,index) in urls">
         <input class="inputs" ref="input" v-on:input="updateUrl(index, $event.target.value)" v-on:blur="updateUrl(index, $event.target.value)" v-bind:value="url"
-          placeholder="Youtube URL.." size="55">
+          placeholder=" Youtube URL.." size="55">
         <a class="text-button-light" href="#" v-on:click="addInput()">Add</a>
         <a class="text-button-light" href="#" v-on:click="removeInput(index)">Remove</a>
         <span class="error" v-if="line_errors[index].error" style="margin-left: 5px;">{{line_errors[index].msg}}</span>
         <span class="valid" v-if="!line_errors[index].error" style="margin-left: 5px;">{{line_errors[index].msg}}</span>
       </div>
 
-      <textarea class="inputs item-last" placeholder="youtube urls" v-on:input="updateBatch($event.target.value)" v-model="batch" rows="5" style="resize: vertical; margin: 5px;"></textarea>
+      <textarea class="inputs item-last" placeholder=" Add Youtube URLs that are line feed delimited.." v-on:input="updateBatch($event.target.value)" v-model="batch" rows="5" style="resize: vertical; margin: 5px;"></textarea>
 
       <div class="item"><a class="text-button-light" href="#" v-on:click="addUrls()">Add Downloads</a></div>
       <div class="item"><a class="text-button-light" href="#" v-on:click="clearAllFiles()">Remove all Downloads</a></div>

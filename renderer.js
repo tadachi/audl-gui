@@ -12,6 +12,7 @@ var shortid = require("shortid");
 var path = require("path");
 var Promise = require("bluebird");
 var bytes = require("bytes");
+var os = require("os");
 // Audl
 var audl_1 = require("./audl");
 // Vue
@@ -24,6 +25,7 @@ var dialog = electron.remote.dialog;
 var app = electron.remote.app;
 var shell = electron.remote.shell;
 var BASEPATH = app.getAppPath();
+var HOMEDIR = os.homedir();
 var NOT_VALID_YOUTUBE_URL = "Not a Valid Youtube URL.";
 var VALID_YOUTUBE_URL = "Valid Youtube URL.";
 var Progress = (function () {
@@ -161,7 +163,7 @@ var AudlFileMeta = (function () {
 }());
 var store = new Vuex.Store({
     state: {
-        folders: { default_folder: BASEPATH },
+        folders: { default_folder: HOMEDIR },
         files: new Array(),
         urls: [""]
     },

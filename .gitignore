@@ -4,3 +4,4 @@ node_modules
 index_pastebin.html
 renderer_pastebin.*
 *.m4a
+audl-gui-win32-x64*

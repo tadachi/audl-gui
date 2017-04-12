@@ -15,7 +15,7 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({minwidth: 800, minheight: 600, maxWidth: 800, icon: __dirname + './icons/music-player.png'})
+  mainWindow = new BrowserWindow({minwidth: 800, minheight: 1280, maxWidth: 800, icon: __dirname + './icons/music-player.png'})
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
